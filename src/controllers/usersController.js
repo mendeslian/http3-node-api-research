@@ -23,13 +23,13 @@ const CreateUserBodySchema = z
 
 async function getUsers(req, res) {
   const query = ListUsersQuerySchema.parse(req.query);
-  const users = listUsers(query.size);
+  const users = await listUsers(query.size);
   res.json(users);
 }
 
 async function getUser(req, res) {
   const params = UserIdParamsSchema.parse(req.params);
-  const user = getUserById(params.id);
+  const user = await getUserById(params.id);
   if (!user) {
     res.status(404).json({ error: 'UserNotFound' });
     return;
@@ -39,7 +39,7 @@ async function getUser(req, res) {
 
 async function createUser(req, res) {
   const body = CreateUserBodySchema.parse(req.body);
-  const user = createOrUpdateUser(body);
+  const user = await createOrUpdateUser(body);
   res.status(201).json(user);
 }
 
