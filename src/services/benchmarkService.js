@@ -1,5 +1,3 @@
-import { env } from '../config/env.js';
-
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -12,14 +10,14 @@ function parsePositiveInt(value) {
 
 function getDelayMs(queryMs) {
   const parsed = parsePositiveInt(queryMs);
-  const ms = parsed ?? env.DEFAULT_DELAY_MS;
-  return Math.min(ms, env.MAX_DELAY_MS);
+  const ms = parsed ?? Number(process.env.DEFAULT_DELAY_MS ?? 0);
+  return Math.min(ms, Number(process.env.MAX_DELAY_MS ?? 60_000));
 }
 
 function getComputeIterations(queryIterations) {
   const parsed = parsePositiveInt(queryIterations);
-  const it = parsed ?? env.DEFAULT_COMPUTE_ITERATIONS;
-  return Math.min(it, env.MAX_COMPUTE_ITERATIONS);
+  const it = parsed ?? Number(process.env.DEFAULT_COMPUTE_ITERATIONS ?? 50_000);
+  return Math.min(it, Number(process.env.MAX_COMPUTE_ITERATIONS ?? 50_000_000));
 }
 
 function computeWork(iterations) {
@@ -32,12 +30,12 @@ function computeWork(iterations) {
 
 function getStreamConfig(query) {
   const chunks = Math.min(
-    parsePositiveInt(query?.chunks) ?? env.DEFAULT_STREAM_CHUNKS,
-    env.MAX_STREAM_CHUNKS,
+    parsePositiveInt(query?.chunks) ?? Number(process.env.DEFAULT_STREAM_CHUNKS ?? 10),
+    Number(process.env.MAX_STREAM_CHUNKS ?? 10_000),
   );
   const chunkSize = Math.min(
-    parsePositiveInt(query?.chunkSize) ?? env.DEFAULT_STREAM_CHUNK_SIZE,
-    env.MAX_STREAM_CHUNK_SIZE,
+    parsePositiveInt(query?.chunkSize) ?? Number(process.env.DEFAULT_STREAM_CHUNK_SIZE ?? 1024),
+    Number(process.env.MAX_STREAM_CHUNK_SIZE ?? 262_144),
   );
   return { chunks, chunkSize };
 }
