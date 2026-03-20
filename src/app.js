@@ -4,7 +4,6 @@ import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
-import { env } from './config/env.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import { requestLogger } from './middlewares/requestLogger.js';
@@ -27,8 +26,8 @@ function createApp() {
 
   app.use(
     rateLimit({
-      windowMs: env.RATE_LIMIT_WINDOW_MS,
-      max: env.RATE_LIMIT_MAX,
+      windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 60_000),
+      max: Number(process.env.RATE_LIMIT_MAX ?? 100),
       standardHeaders: true,
       legacyHeaders: false,
     }),

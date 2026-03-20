@@ -1,19 +1,9 @@
-import { env } from '../config/env.js';
+import * as userRepository from '../repositories/userRepository.js';
 import { stableStringify } from '../utils/stableStringify.js';
 
 function repeatChar(char, length) {
   if (length <= 0) return '';
   return char.repeat(length);
-}
-
-function createSeedUser(id) {
-  const paddedId = String(id).padStart(6, '0');
-  return {
-    id: String(id),
-    name: `User ${paddedId}`,
-    email: `user${paddedId}@example.test`,
-    bio: repeatChar('a', env.DEFAULT_USER_BIO_SIZE),
-  };
 }
 
 function fnv1a32(input) {
@@ -25,32 +15,23 @@ function fnv1a32(input) {
   return hash >>> 0;
 }
 
-const seedUsers = Array.from({ length: env.SEED_USERS_COUNT }, (_, idx) =>
-  createSeedUser(idx + 1),
-);
-const customUsersById = new Map();
-
 function parsePositiveInt(value) {
   const n = Number(value);
   if (!Number.isInteger(n) || n <= 0) return null;
   return n;
 }
 
-function listUsers(size) {
-  const n = parsePositiveInt(size) ?? env.DEFAULT_LIST_SIZE;
-  const bounded = Math.min(n, env.MAX_LIST_SIZE);
-  return seedUsers.slice(0, bounded);
+async function listUsers(size) {
+  const n = parsePositiveInt(size) ?? Number(process.env.DEFAULT_LIST_SIZE ?? 100);
+  const bounded = Math.min(n, Number(process.env.MAX_LIST_SIZE ?? 5000));
+  return userRepository.findAll(bounded);
 }
 
-function getUserById(id) {
-  const numericId = parsePositiveInt(id);
-  if (numericId && numericId <= seedUsers.length) {
-    return seedUsers[numericId - 1];
-  }
-  return customUsersById.get(String(id)) ?? null;
+async function getUserById(id) {
+  return userRepository.findById(String(id)) ?? null;
 }
 
-function createOrUpdateUser(input) {
+async function createOrUpdateUser(input) {
   const stable = stableStringify(input);
   const id = `c_${fnv1a32(stable).toString(16).padStart(8, '0')}`;
 
@@ -61,11 +42,10 @@ function createOrUpdateUser(input) {
     id,
     name,
     email,
-    bio: repeatChar('b', env.DEFAULT_USER_BIO_SIZE),
+    bio: repeatChar('b', Number(process.env.DEFAULT_USER_BIO_SIZE ?? 256)),
   };
 
-  customUsersById.set(id, user);
-  return user;
+  return userRepository.upsert(user);
 }
 
 export { createOrUpdateUser, getUserById, listUsers };
