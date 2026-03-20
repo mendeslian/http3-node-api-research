@@ -15,6 +15,7 @@ function createApp() {
   const app = express();
 
   app.disable('x-powered-by');
+  app.set('trust proxy', env.TRUST_PROXY_HOPS);
 
   app.use(requestLogger);
   app.use(requestMetrics);
