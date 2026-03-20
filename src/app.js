@@ -8,6 +8,7 @@ import { env } from './config/env.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import { requestLogger } from './middlewares/requestLogger.js';
+import { requestMetrics } from './middlewares/requestMetrics.js';
 import { routes } from './routes/index.js';
 
 function createApp() {
@@ -16,6 +17,7 @@ function createApp() {
   app.disable('x-powered-by');
 
   app.use(requestLogger);
+  app.use(requestMetrics);
   app.use(helmet());
   app.use(cors());
   app.use(compression());
