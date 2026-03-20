@@ -14,7 +14,14 @@ function createApp() {
   const app = express();
 
   app.disable('x-powered-by');
-  app.set('trust proxy', env.TRUST_PROXY_HOPS);
+  const trustProxyHops = Number.parseInt(
+    process.env.TRUST_PROXY_HOPS ?? '1',
+    10,
+  );
+  app.set(
+    'trust proxy',
+    Number.isFinite(trustProxyHops) && trustProxyHops >= 0 ? trustProxyHops : 1,
+  );
 
   app.use(requestLogger);
   app.use(requestMetrics);

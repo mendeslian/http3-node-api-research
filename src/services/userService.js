@@ -22,7 +22,8 @@ function parsePositiveInt(value) {
 }
 
 async function listUsers(size) {
-  const n = parsePositiveInt(size) ?? Number(process.env.DEFAULT_LIST_SIZE ?? 100);
+  const n =
+    parsePositiveInt(size) ?? Number(process.env.DEFAULT_LIST_SIZE ?? 100);
   const bounded = Math.min(n, Number(process.env.MAX_LIST_SIZE ?? 5000));
   return userRepository.findAll(bounded);
 }

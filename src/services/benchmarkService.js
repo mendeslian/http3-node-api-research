@@ -30,11 +30,13 @@ function computeWork(iterations) {
 
 function getStreamConfig(query) {
   const chunks = Math.min(
-    parsePositiveInt(query?.chunks) ?? Number(process.env.DEFAULT_STREAM_CHUNKS ?? 10),
+    parsePositiveInt(query?.chunks) ??
+      Number(process.env.DEFAULT_STREAM_CHUNKS ?? 10),
     Number(process.env.MAX_STREAM_CHUNKS ?? 10_000),
   );
   const chunkSize = Math.min(
-    parsePositiveInt(query?.chunkSize) ?? Number(process.env.DEFAULT_STREAM_CHUNK_SIZE ?? 1024),
+    parsePositiveInt(query?.chunkSize) ??
+      Number(process.env.DEFAULT_STREAM_CHUNK_SIZE ?? 1024),
     Number(process.env.MAX_STREAM_CHUNK_SIZE ?? 262_144),
   );
   return { chunks, chunkSize };
