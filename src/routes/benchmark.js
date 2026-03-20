@@ -1,7 +1,11 @@
 import express from 'express';
 
 import { compute, delay, stream } from '../controllers/benchmarkController.js';
-import { createUser, getUser, getUsers } from '../controllers/usersController.js';
+import {
+  createUser,
+  getUser,
+  getUsers,
+} from '../controllers/usersController.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 const benchmarkRouter = express.Router();

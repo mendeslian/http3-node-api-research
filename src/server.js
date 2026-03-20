@@ -15,7 +15,10 @@ server.listen(PORT, async () => {
 
   try {
     await db.raw('SELECT 1');
-    logger.info({ host: process.env.DB_HOST, db: process.env.DB_NAME }, 'Database connected');
+    logger.info(
+      { host: process.env.DB_HOST, db: process.env.DB_NAME },
+      'Database connected',
+    );
   } catch (err) {
     logger.error({ err }, 'Database connection failed');
   }
