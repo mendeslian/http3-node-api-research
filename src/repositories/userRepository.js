@@ -1,6 +1,7 @@
 import { db } from '../config/database.js';
 
-const TABLE = 'users';
+const TABLE = process.env.DB_USERS_TABLE ?? 'user';
+const DB_SCHEMA = process.env.DB_SCHEMA ?? 'dev';
 
 function buildSeedUser(i) {
   const createdAt = new Date('2026-03-20T21:44:14.777Z').toISOString();
@@ -51,6 +52,7 @@ const isTest = process.env.NODE_ENV === 'test';
 function findAll(limit) {
   if (isTest) return memRepo.findAll(limit);
   return db(TABLE)
+    .withSchema(DB_SCHEMA)
     .select('id', 'name', 'email', 'bio', 'created_at', 'updated_at')
     .orderBy('id', 'asc')
     .limit(limit);
@@ -59,6 +61,7 @@ function findAll(limit) {
 function findById(id) {
   if (isTest) return memRepo.findById(id);
   return db(TABLE)
+    .withSchema(DB_SCHEMA)
     .select('id', 'name', 'email', 'bio', 'created_at', 'updated_at')
     .where({ id })
     .first();
@@ -67,6 +70,7 @@ function findById(id) {
 async function create(input) {
   if (isTest) return memRepo.create(input);
   const inserted = await db(TABLE)
+    .withSchema(DB_SCHEMA)
     .insert({
       name: input.name,
       email: input.email,
