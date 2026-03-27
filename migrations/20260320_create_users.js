@@ -3,10 +3,10 @@
  */
 export async function up(knex) {
   await knex.schema.createTable('users', (table) => {
-    table.string('id').primary();
-    table.string('name').notNullable();
-    table.string('email').notNullable();
-    table.text('bio').defaultTo('');
+    table.increments('id').primary();
+    table.string('name', 100).notNullable();
+    table.string('email', 50).notNullable();
+    table.string('bio', 200).notNullable().defaultTo('');
     table.timestamps(true, true);
   });
 }

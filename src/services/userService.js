@@ -1,18 +1,8 @@
 import * as userRepository from '../repositories/userRepository.js';
-import { stableStringify } from '../utils/stableStringify.js';
 
 function repeatChar(char, length) {
   if (length <= 0) return '';
   return char.repeat(length);
-}
-
-function fnv1a32(input) {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < input.length; i += 1) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0;
 }
 
 function parsePositiveInt(value) {
@@ -29,24 +19,24 @@ async function listUsers(size) {
 }
 
 async function getUserById(id) {
-  return userRepository.findById(String(id)) ?? null;
+  const n = parsePositiveInt(id);
+  if (!n) return null;
+  return userRepository.findById(n) ?? null;
 }
 
-async function createOrUpdateUser(input) {
-  const stable = stableStringify(input);
-  const id = `c_${fnv1a32(stable).toString(16).padStart(8, '0')}`;
-
-  const name = input?.name?.trim?.() || `Custom ${id}`;
-  const email = input?.email?.trim?.() || `${id}@example.test`;
+async function createUser(input) {
+  const name = input?.name?.trim?.() || `User ${Date.now()}`;
+  const email = input?.email?.trim?.() || `user${Date.now()}@example.test`;
 
   const user = {
-    id,
     name,
     email,
-    bio: repeatChar('b', Number(process.env.DEFAULT_USER_BIO_SIZE ?? 256)),
+    bio:
+      input?.bio?.trim?.() ||
+      repeatChar('b', Number(process.env.DEFAULT_USER_BIO_SIZE ?? 256)),
   };
 
-  return userRepository.upsert(user);
+  return userRepository.create(user);
 }
 
-export { createOrUpdateUser, getUserById, listUsers };
+export { createUser, getUserById, listUsers };

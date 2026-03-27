@@ -43,34 +43,38 @@ test('GET /users respeita size e retorna determinístico', async () => {
 
   assert.equal(Array.isArray(res.body), true);
   assert.equal(res.body.length, 10);
-  assert.equal(res.body[0].id, '1');
-  assert.equal(res.body[9].id, '10');
+  assert.equal(res.body[0].id, 1);
+  assert.equal(res.body[9].id, 10);
+  assert.equal(res.body[0].name, 'User 1');
+  assert.equal(res.body[0].email, 'user1@email.com');
 });
 
 test('GET /users/:id retorna usuário seed e 404 quando não existe', async () => {
   const app = createApp();
 
   const res = await request(app).get('/users/1').expect(200);
-  assert.equal(res.body.id, '1');
+  assert.equal(res.body.id, 1);
   assert.equal(typeof res.body.bio, 'string');
 
   await request(app).get('/users/999999').expect(404);
 });
 
-test('POST /users é determinístico (mesmo body => mesmo id) e permite lookup', async () => {
+test('POST /users cria usuário e permite lookup', async () => {
   const app = createApp();
 
-  const body = { name: 'Alice', email: 'alice@example.test' };
+  const body = { name: 'Alice', email: 'alice@example.test', bio: 'Hello' };
 
-  const res1 = await request(app).post('/users').send(body).expect(201);
-  const res2 = await request(app).post('/users').send(body).expect(201);
+  const created = await request(app).post('/users').send(body).expect(201);
 
-  assert.equal(typeof res1.body.id, 'string');
-  assert.ok(res1.body.id.startsWith('c_'));
-  assert.equal(res1.body.id, res2.body.id);
+  assert.equal(typeof created.body.id, 'number');
+  assert.equal(created.body.name, body.name);
+  assert.equal(created.body.email, body.email);
+  assert.equal(created.body.bio, body.bio);
 
-  const lookup = await request(app).get(`/users/${res1.body.id}`).expect(200);
-  assert.deepEqual(lookup.body, res1.body);
+  const lookup = await request(app)
+    .get(`/users/${created.body.id}`)
+    .expect(200);
+  assert.deepEqual(lookup.body, created.body);
 });
 
 test('GET /delay retorna delayedMs configurado', async () => {

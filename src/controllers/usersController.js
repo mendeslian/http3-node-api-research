@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import {
-  createOrUpdateUser,
+  createUser as createUserService,
   getUserById,
   listUsers,
 } from '../services/userService.js';
@@ -11,13 +11,14 @@ const ListUsersQuerySchema = z.object({
 });
 
 const UserIdParamsSchema = z.object({
-  id: z.string().min(1),
+  id: z.coerce.number().int().positive(),
 });
 
 const CreateUserBodySchema = z
   .object({
-    name: z.string().min(1).optional(),
-    email: z.string().min(1).optional(),
+    name: z.string().min(1),
+    email: z.string().min(1),
+    bio: z.string().optional(),
   })
   .passthrough();
 
@@ -39,7 +40,7 @@ async function getUser(req, res) {
 
 async function createUser(req, res) {
   const body = CreateUserBodySchema.parse(req.body);
-  const user = await createOrUpdateUser(body);
+  const user = await createUserService(body);
   res.status(201).json(user);
 }
 
