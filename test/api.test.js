@@ -5,8 +5,18 @@ import request from 'supertest';
 process.env.NODE_ENV = 'test';
 process.env.LOG_LEVEL = 'silent';
 
+// Permite rodar testes contra uma URL externa (ex: Caddy)
+const TEST_URL = process.env.TEST_URL;
+
+// Se estivermos testando via HTTPS com certificado auto-assinado (Caddy internal tls)
+if (TEST_URL?.startsWith('https')) {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 const { createApp } = await import('../src/app.js');
 const { db } = await import('../src/config/database.js');
+
+const appInstance = TEST_URL || createApp();
 
 const DB_SCHEMA = process.env.DB_SCHEMA ?? 'dev';
 const DB_USERS_TABLE = process.env.DB_USERS_TABLE ?? 'user';
@@ -37,7 +47,7 @@ async function getMaxUserId() {
 }
 
 test('GET /health retorna ok', async () => {
-  const app = createApp();
+  const app = appInstance;
 
   const res = await request(app).get('/health').expect(200);
 
@@ -46,7 +56,7 @@ test('GET /health retorna ok', async () => {
 });
 
 test('POST /v1/echo ecoa mensagem', async () => {
-  const app = createApp();
+  const app = appInstance;
 
   const res = await request(app)
     .post('/v1/echo')
@@ -57,7 +67,7 @@ test('POST /v1/echo ecoa mensagem', async () => {
 });
 
 test('POST /v1/echo valida body', async () => {
-  const app = createApp();
+  const app = appInstance;
 
   const res = await request(app).post('/v1/echo').send({}).expect(400);
 
@@ -66,7 +76,7 @@ test('POST /v1/echo valida body', async () => {
 });
 
 test('GET /users busca até o tamanho máximo permitido', async () => {
-  const app = createApp();
+  const app = appInstance;
 
   const maxListSize = Number(process.env.MAX_LIST_SIZE ?? 5000);
   const requestedSize = maxListSize * 10;
@@ -94,7 +104,7 @@ test('GET /users busca até o tamanho máximo permitido', async () => {
 });
 
 test('GET /users/:id retorna usuário seed e 404 quando não existe', async () => {
-  const app = createApp();
+  const app = appInstance;
 
   const minId = await getMinUserId();
   if (minId === null) {
@@ -117,7 +127,7 @@ test('GET /users/:id retorna usuário seed e 404 quando não existe', async () =
 });
 
 test('POST /users cria usuário e permite lookup', async () => {
-  const app = createApp();
+  const app = appInstance;
 
   const stamp = String(Date.now());
   const body = {
@@ -145,14 +155,14 @@ test('POST /users cria usuário e permite lookup', async () => {
 });
 
 test('GET /delay retorna delayedMs configurado', async () => {
-  const app = createApp();
+  const app = appInstance;
 
   const res = await request(app).get('/delay?ms=5').expect(200);
   assert.equal(res.body.delayedMs, 5);
 });
 
 test('GET /compute retorna resultado determinístico', async () => {
-  const app = createApp();
+  const app = appInstance;
 
   const res = await request(app).get('/compute?iterations=1000').expect(200);
   assert.equal(res.body.iterations, 1000);
@@ -160,7 +170,7 @@ test('GET /compute retorna resultado determinístico', async () => {
 });
 
 test('GET /stream retorna dados em chunks', async () => {
-  const app = createApp();
+  const app = appInstance;
 
   const res = await request(app)
     .get('/stream?chunks=3&chunkSize=5')

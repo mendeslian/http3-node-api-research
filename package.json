@@ -6,11 +6,14 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
+    "dev:caddy": "nodemon --exec \"caddy run & node src/server.js\"",
     "start": "node src/server.js",
+    "start:caddy": "caddy run & node src/server.js",
     "lint": "eslint .",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "node --test"
+    "test": "node --test",
+    "test:caddy": "cross-env TEST_URL=https://localhost:8443 node --test"
   },
   "repository": {
     "type": "git",
@@ -44,6 +47,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
+    "cross-env": "^10.1.0",
     "eslint": "^9.30.1",
     "globals": "^15.15.0",
     "nodemon": "^3.1.10",
