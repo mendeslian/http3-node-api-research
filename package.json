@@ -13,7 +13,9 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "test": "node --test",
-    "test:caddy": "cross-env TEST_URL=https://localhost:8443 node --test"
+    "test:caddy": "cross-env TEST_URL=https://localhost:8443 node --test",
+    "bench:api": "k6 run -e TARGET_URL=http://localhost:3000 benchmarks/load-test.js",
+    "bench:caddy": "k6 run -e TARGET_URL=https://localhost:8443 benchmarks/load-test.js"
   },
   "repository": {
     "type": "git",

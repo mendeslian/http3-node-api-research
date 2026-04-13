@@ -10,7 +10,7 @@ const server = createServer(app);
 
 const PORT = Number(process.env.PORT ?? 3000);
 
-server.listen(PORT, async () => {
+server.listen(PORT, '0.0.0.0', async () => {
   logger.info({ port: PORT }, 'Server is running');
 
   try {
