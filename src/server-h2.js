@@ -26,16 +26,16 @@ const PORT = Number(process.env.PORT ?? 3000);
 server.listen(PORT, '0.0.0.0', async () => {
   logger.info(
     { port: PORT, protocol: 'HTTP/2' },
-    'Server is running with HTTP/2 Support',
+    'Servidor em execução com suporte a HTTP/2',
   );
 
   try {
     await db.raw('SELECT 1');
     logger.info(
       { host: process.env.DB_HOST, db: process.env.DB_NAME },
-      'Database connected',
+      'Banco de dados conectado',
     );
   } catch (err) {
-    logger.error({ err }, 'Database connection failed');
+    logger.error({ err }, 'Falha ao conectar ao banco de dados');
   }
 });

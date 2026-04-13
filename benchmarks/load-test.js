@@ -28,8 +28,8 @@ export default function () {
   const res = http.get(`${BASE_URL}/users?size=100000`);
 
   check(res, {
-    'status is 200': (r) => r.status === 200,
-    'body length is > 1MB': (r) => r.body && r.body.length > 1024 * 1024, // Adicionado check de existência do body
+    'status é 200': (r) => r.status === 200,
+    'tamanho do corpo > 1MB': (r) => r.body && r.body.length > 1024 * 1024, // Adicionado check de existência do body
   });
 
   sleep(1); // Espera 1s entre iterações por VU para não fritar o NeonDB

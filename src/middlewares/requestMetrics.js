@@ -36,7 +36,7 @@ function requestMetrics(req, res, next) {
         durationMs,
         bytesSent,
       },
-      'request_metrics',
+      'metricas_requisicao',
     );
   });
 

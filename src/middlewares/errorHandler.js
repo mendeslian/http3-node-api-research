@@ -22,7 +22,7 @@ function errorHandler(err, req, res, next) {
       : err?.message || 'InternalServerError';
 
   if (req?.log?.error) {
-    req.log.error({ err, statusCode }, 'request_error');
+    req.log.error({ err, statusCode }, 'erro_requisicao');
   }
 
   res.status(statusCode).json({ error: message });
