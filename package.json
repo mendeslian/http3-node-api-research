@@ -12,8 +12,8 @@
     "lint": "eslint .",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "node --test",
-    "test:caddy": "cross-env TEST_URL=https://localhost:8443 node --test",
+    "test": "node --test test/api.test.js",
+    "test:caddy": "cross-env TEST_URL=https://localhost:8443 node --test test/api.test.js",
     "bench:api": "k6 run -e TARGET_URL=http://localhost:3000 benchmarks/load-test.js",
     "bench:caddy": "k6 run -e TARGET_URL=https://localhost:8443 benchmarks/load-test.js"
   },

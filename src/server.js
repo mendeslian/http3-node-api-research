@@ -11,15 +11,15 @@ const server = createServer(app);
 const PORT = Number(process.env.PORT ?? 3000);
 
 server.listen(PORT, '0.0.0.0', async () => {
-  logger.info({ port: PORT }, 'Server is running');
+  logger.info({ port: PORT }, 'Servidor em execução');
 
   try {
     await db.raw('SELECT 1');
     logger.info(
       { host: process.env.DB_HOST, db: process.env.DB_NAME },
-      'Database connected',
+      'Banco de dados conectado',
     );
   } catch (err) {
-    logger.error({ err }, 'Database connection failed');
+    logger.error({ err }, 'Falha ao conectar ao banco de dados');
   }
 });
