@@ -1,25 +1,30 @@
+// Pausa artificial usada para simular latencia do servidor.
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Converte entradas numericas e descarta valores invalidos.
 function parsePositiveInt(value) {
   const n = Number(value);
   if (!Number.isInteger(n) || n <= 0) return null;
   return n;
 }
 
+// Define o atraso do endpoint /delay respeitando o limite do .env.
 function getDelayMs(queryMs) {
   const parsed = parsePositiveInt(queryMs);
   const ms = parsed ?? Number(process.env.DEFAULT_DELAY_MS ?? 0);
   return Math.min(ms, Number(process.env.MAX_DELAY_MS ?? 60_000));
 }
 
+// Define quanto trabalho de CPU o endpoint /compute deve executar.
 function getComputeIterations(queryIterations) {
   const parsed = parsePositiveInt(queryIterations);
   const it = parsed ?? Number(process.env.DEFAULT_COMPUTE_ITERATIONS ?? 50_000);
   return Math.min(it, Number(process.env.MAX_COMPUTE_ITERATIONS ?? 50_000_000));
 }
 
+// Loop deterministico para medir custo de CPU sem depender do banco.
 function computeWork(iterations) {
   let acc = 0;
   for (let i = 0; i < iterations; i += 1) {
@@ -28,6 +33,7 @@ function computeWork(iterations) {
   return acc;
 }
 
+// Configura quantidade e tamanho dos blocos enviados pelo /stream.
 function getStreamConfig(query) {
   const chunks = Math.min(
     parsePositiveInt(query?.chunks) ??
@@ -42,6 +48,7 @@ function getStreamConfig(query) {
   return { chunks, chunkSize };
 }
 
+// Envia a resposta em partes para testar transferencia de dados grandes.
 async function streamChunks({ req, res, chunks, chunkSize }) {
   const chunk = Buffer.alloc(chunkSize, 'z');
   let aborted = false;
