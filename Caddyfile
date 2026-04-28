@@ -1,15 +1,36 @@
 {
-  # Ativa explicitamente o suporte a HTTP/3 (em versões recentes já é padrão)
-  servers {
-    protocols h1 h2 h3
-  }
+	# Porta principal: Caddy pode negociar h1, h2 ou h3 conforme o cliente suportar.
+	servers :8443 {
+		protocols h1 h2 h3
+	}
+
+	# Porta de controle: forca HTTP/1.1 sobre TLS para comparar com a porta acima.
+	servers :8444 {
+		protocols h1
+	}
 }
 
 https://localhost:8443 {
-  tls internal
-  
-  # Adiciona header para indicar suporte ao HTTP/3 (Alt-Svc)
-  header Alt-Svc "h3=\":8443\"; ma=2592000"
-  
-  reverse_proxy localhost:3000
+	tls internal
+
+	log {
+		output stdout
+		format console
+	}
+
+	# Anuncia HTTP/3 para clientes que sabem usar QUIC.
+	header Alt-Svc "h3=\":8443\"; ma=2592000"
+
+	reverse_proxy localhost:3000
+}
+
+https://localhost:8444 {
+	tls internal
+
+	log {
+		output stdout
+		format console
+	}
+
+	reverse_proxy localhost:3000
 }
