@@ -1,36 +1,43 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
-export const options = {
-  scenarios: {
-    // Cenário 1: Carga constante para comparar HTTP/1.1 vs HTTP/3
-    constant_load: {
-      executor: 'constant-arrival-rate',
-      rate: 50, // 50 requisições por segundo
-      timeUnit: '1s',
-      duration: '30s',
-      preAllocatedVUs: 10,
-      maxVUs: 50,
-    },
-  },
-  thresholds: {
-    http_req_duration: ['p(95)<500'], // 95% das reqs devem ser < 500ms
-  },
-};
+import { buildOptions, envText } from './k6-options.js';
+import { envNumber, profiles } from './profiles.js';
 
-// Pega a URL do ambiente ou usa o padrão (Caddy ou API direta)
-// eslint-disable-next-line no-undef
-const BASE_URL = __ENV.TARGET_URL || 'http://localhost:3000';
+// TARGET_URL permite alternar entre API direta e Caddy sem mudar o arquivo.
+const BASE_URL = envText('TARGET_URL', 'http://localhost:3000');
+const SLEEP_MS = envNumber('SLEEP_MS', 0);
+const EXPECTED_STATUS = envNumber('EXPECTED_STATUS', 200);
+
+const built = buildOptions();
+const selectedProfiles = built.selectedProfiles;
+export const options = built.options;
 
 export default function () {
-  // Testando a rota de listagem com carga massiva (100k registros se o size for grande)
-  // Professor sugeriu 100k para ver diferença real no throughput/latência do QUIC
-  const res = http.get(`${BASE_URL}/users?size=100000`);
+  // Quando BENCH_PROFILE tem varios perfis, cada scenario injeta seu proprio env.
+  // eslint-disable-next-line no-undef
+  const profileName = __ENV.SCENARIO_PROFILE || selectedProfiles[0];
+  // eslint-disable-next-line no-undef
+  const path = __ENV.SCENARIO_PATH || profiles[profileName].path;
+  // eslint-disable-next-line no-undef
+  const timeout = __ENV.SCENARIO_TIMEOUT || profiles[profileName].timeout || '60s';
+  // eslint-disable-next-line no-undef
+  const minBytes = Number(__ENV.SCENARIO_MIN_BYTES ?? profiles[profileName].minBytes);
+  const url = `${BASE_URL}${path}`;
 
-  check(res, {
-    'status é 200': (r) => r.status === 200,
-    'tamanho do corpo > 1MB': (r) => r.body && r.body.length > 1024 * 1024, // Adicionado check de existência do body
+  const res = http.get(url, {
+    timeout,
+    tags: { profile: profileName, path },
   });
 
-  sleep(1); // Espera 1s entre iterações por VU para não fritar o NeonDB
+  check(res, {
+    'status esperado': (r) => r.status === EXPECTED_STATUS,
+    'corpo tem tamanho minimo': (r) =>
+      !minBytes || (r.body && r.body.length >= minBytes),
+  });
+
+  // Em constant-arrival-rate, pausa por VU aumenta a quantidade de VUs necessaria.
+  if (SLEEP_MS > 0) {
+    sleep(SLEEP_MS / 1000);
+  }
 }

@@ -14,8 +14,18 @@
     "format:check": "prettier . --check",
     "test": "node --test test/api.test.js",
     "test:caddy": "cross-env TEST_URL=https://localhost:8443 node --test test/api.test.js",
-    "bench:api": "k6 run -e TARGET_URL=http://localhost:3000 benchmarks/load-test.js",
-    "bench:caddy": "k6 run -e TARGET_URL=https://localhost:8443 benchmarks/load-test.js"
+    "bench:api": "node scripts/run-k6.js --target http://localhost:3000",
+    "bench:caddy": "node scripts/run-k6.js --target https://localhost:8443 --insecure",
+    "bench:caddy:h1": "node scripts/run-k6.js --target https://localhost:8444 --insecure",
+    "bench:latency:api": "cross-env BENCH_PROFILE=health RATE=100 DURATION=30s THRESHOLD_P95=100 node scripts/run-k6.js --target http://localhost:3000",
+    "bench:latency:caddy": "cross-env BENCH_PROFILE=health RATE=100 DURATION=30s THRESHOLD_P95=100 node scripts/run-k6.js --target https://localhost:8443 --insecure",
+    "bench:payload:api": "cross-env BENCH_PROFILE=stream-medium RATE=10 DURATION=30s THRESHOLD_P95=2000 node scripts/run-k6.js --target http://localhost:3000",
+    "bench:payload:caddy": "cross-env BENCH_PROFILE=stream-medium RATE=10 DURATION=30s THRESHOLD_P95=2000 node scripts/run-k6.js --target https://localhost:8443 --insecure",
+    "bench:users-large:api": "cross-env BENCH_PROFILE=users-large RATE=1 DURATION=1m MAX_VUS=20 REQUEST_TIMEOUT=120s node scripts/run-k6.js --target http://localhost:3000",
+    "bench:users-large:caddy": "cross-env BENCH_PROFILE=users-large RATE=1 DURATION=1m MAX_VUS=20 REQUEST_TIMEOUT=120s node scripts/run-k6.js --target https://localhost:8443 --insecure",
+    "bench:all:api": "cross-env BENCH_PROFILE=all DURATION=30s node scripts/run-k6.js --target http://localhost:3000",
+    "bench:all:caddy": "cross-env BENCH_PROFILE=all DURATION=30s node scripts/run-k6.js --target https://localhost:8443 --insecure",
+    "bench:all:caddy:h1": "cross-env BENCH_PROFILE=all DURATION=30s node scripts/run-k6.js --target https://localhost:8444 --insecure"
   },
   "repository": {
     "type": "git",
