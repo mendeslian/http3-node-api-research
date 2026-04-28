@@ -1,8 +1,9 @@
 import { db } from '../config/database.js';
 
-const TABLE = process.env.DB_USERS_TABLE ?? 'user';
+const TABLE = process.env.DB_USERS_TABLE ?? 'users';
 const DB_SCHEMA = process.env.DB_SCHEMA ?? 'dev';
 
+// Padroniza o formato vindo do banco antes de devolver para a API.
 function normalizeUserRow(row) {
   if (!row) return row;
   const createdAt =
@@ -23,6 +24,7 @@ function normalizeUserRow(row) {
   };
 }
 
+// Lista usuarios em ordem fixa para deixar testes e benchmarks comparaveis.
 async function findAll(limit) {
   const rows = await db(TABLE)
     .withSchema(DB_SCHEMA)
@@ -32,6 +34,7 @@ async function findAll(limit) {
   return rows.map(normalizeUserRow);
 }
 
+// Busca um usuario especifico pelo id informado na rota.
 async function findById(id) {
   const row = await db(TABLE)
     .withSchema(DB_SCHEMA)
@@ -41,6 +44,7 @@ async function findById(id) {
   return normalizeUserRow(row);
 }
 
+// Insere um novo usuario e retorna exatamente a linha criada no banco.
 async function create(input) {
   const inserted = await db(TABLE)
     .withSchema(DB_SCHEMA)
