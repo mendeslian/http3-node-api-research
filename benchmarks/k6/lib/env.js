@@ -6,23 +6,21 @@
 // - Para HTTP/3 de verdade, use um cliente que negocie h3/QUIC (ex: curl com --http3)
 //   ou rode os testes contra um endpoint que efetivamente atende em HTTP/3.
 
-// eslint-disable-next-line no-undef
+/* global __ENV */
+
 const ENV = __ENV;
 
 export function getBaseUrl() {
-  // eslint-disable-next-line no-undef
   return ENV.TARGET_URL || 'http://localhost:3000';
 }
 
 export function getProfile() {
   // Perfis ajudam a padronizar rodadas de benchmark e comparar resultados
   // sem ficar editando código.
-  // eslint-disable-next-line no-undef
   return ENV.PROFILE || 'baseline';
 }
 
 export function getUsersSize() {
-  // eslint-disable-next-line no-undef
   const v = Number(ENV.USERS_SIZE || 100000);
   return Number.isFinite(v) ? v : 100000;
 }

@@ -12,3 +12,4 @@ build
 .DS_Store
 package-lock.json
 infra/nginx/certs
+benchmarks/results

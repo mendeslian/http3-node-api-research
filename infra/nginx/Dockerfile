@@ -1,4 +1,6 @@
-FROM ghcr.io/nginxinc/nginx-quic/nginx-quic:latest
+FROM nginx:mainline-alpine
+
+RUN apk add --no-cache openssl
 
 COPY infra/nginx/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
