@@ -6,16 +6,20 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "dev:caddy": "nodemon --exec \"caddy run & node src/server.js\"",
     "start": "node src/server.js",
-    "start:caddy": "caddy run & node src/server.js",
+    "proxy:up": "docker compose up -d --build nginx",
+    "proxy:down": "docker compose down",
+    "dev:nginx": "concurrently -k -n proxy,api \"docker compose up --build nginx\" \"nodemon src/server.js\"",
+    "start:nginx": "npm run proxy:up && node src/server.js",
     "lint": "eslint .",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "test": "node --test test/api.test.js",
-    "test:caddy": "cross-env TEST_URL=https://localhost:8443 node --test test/api.test.js",
-    "bench:api": "k6 run -e TARGET_URL=http://localhost:3000 benchmarks/load-test.js",
-    "bench:caddy": "k6 run -e TARGET_URL=https://localhost:8443 benchmarks/load-test.js"
+    "test": "node --test test/**/*.test.js",
+    "test:nginx": "cross-env TEST_URL=https://localhost:8443 node --test test/**/*.test.js",
+    "bench:h1": "k6 run -e TARGET_URL=http://localhost:3000 benchmarks/k6/run.js",
+    "bench:h3": "k6 run -e TARGET_URL=https://localhost:8443 benchmarks/k6/run.js",
+    "bench:h1:smoke": "k6 run -e TARGET_URL=http://localhost:3000 -e PROFILE=smoke benchmarks/k6/run.js",
+    "bench:h3:smoke": "k6 run -e TARGET_URL=https://localhost:8443 -e PROFILE=smoke benchmarks/k6/run.js"
   },
   "repository": {
     "type": "git",
@@ -49,6 +53,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
+    "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "eslint": "^9.30.1",
     "globals": "^15.15.0",
