@@ -6,7 +6,7 @@ import { db } from './config/database.js';
 import { logger } from './config/logger.js';
 
 // Para rodar H2 nativo no Node, precisamos de certificados (mesmo que auto-assinados)
-// No cenário com Caddy, o Caddy já faz o TLS. Aqui é para teste direto.
+// No cenário com proxy (ex: NGINX), o proxy pode fazer o TLS. Aqui é para teste direto.
 const options = {
   // key: readFileSync('server.key'),
   // cert: readFileSync('server.crt'),

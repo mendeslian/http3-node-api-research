@@ -32,6 +32,7 @@ function requestMetrics(req, res, next) {
       {
         method: req.method,
         path: req.originalUrl,
+        protocol: `HTTP/${req.httpVersion}`,
         statusCode: res.statusCode,
         durationMs,
         bytesSent,

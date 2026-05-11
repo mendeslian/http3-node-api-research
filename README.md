@@ -34,6 +34,7 @@ Lian Mendes, Lucas Cardoso
 ## Requisitos do projeto
 
 - Node.js >= 18
+- Para rodar o proxy HTTP/3: Docker Desktop (Windows/macOS/Linux) com suporte a `docker compose`
 
 ## Como rodar
 
@@ -42,14 +43,28 @@ npm install
 npm run dev
 ```
 
+### Rodar com proxy HTTP/3 (NGINX)
+
+Em um terminal:
+
+```bash
+npm run dev:nginx
+```
+
+Isso sobe o NGINX com HTTP/3 em `https://localhost:8443` (TCP+UDP) e a API em `http://localhost:3000`.
+
 ## Scripts
 
 - `npm run dev`: sobe a API com reload
 - `npm start`: sobe a API sem reload
+- `npm run dev:nginx`: sobe NGINX (HTTP/3) + API com reload
+- `npm run start:nginx`: sobe o proxy NGINX (HTTP/3) e a API
+- `npm run proxy:up`: sobe apenas o proxy NGINX (HTTP/3)
+- `npm run proxy:down`: derruba o proxy NGINX
 - `npm run lint`: checagem de lint
 - `npm run format`: formata o projeto
 - `npm run test`: roda os testes unitários/integração
-- `npm run test:caddy`: roda os testes contra o proxy Caddy (https)
+- `npm run test:nginx`: roda os testes contra o proxy NGINX (https/http3)
 
 ## Benchmarks Avançados
 
@@ -57,10 +72,27 @@ O projeto inclui scripts de teste de carga com **k6** para comparar o desempenho
 
 ### Como rodar o benchmark:
 1. Instale o [k6](https://k6.io/docs/get-started/installation/)
-2. Sobe a API e o Caddy (`npm run start:caddy`)
+2. Sobe a API e o NGINX (`npm run start:nginx`)
 3. Em outro terminal, rode:
-   - `npm run bench:api` (Teste direto contra Node - HTTP/1.1)
-   - `npm run bench:caddy` (Teste via Caddy - HTTP/3)
+   - `npm run bench:h1` (Teste direto contra Node - HTTP/1.1)
+   - `npm run bench:h3` (Teste via proxy - objetivo é HTTP/3)
+
+#### Perfis e cenários (k6)
+- **Profiles** (controlam carga): `baseline` (default), `smoke`, `high_rps`
+- **Scenarios** (qual endpoint exercitar): `users_large_list` (default), `server_delay`
+
+Exemplos:
+
+```bash
+# HTTP/1.1 direto, smoke
+npm run bench:h1:smoke
+
+# Via proxy, smoke
+npm run bench:h3:smoke
+
+# Via proxy, cenário de backend lento
+k6 run -e TARGET_URL=https://localhost:8443 -e SCENARIO=server_delay benchmarks/k6/run.js
+```
 
 ### Simulação de Cenários Críticos (Feedback do Professor)
 Para simular **alta latência**, **perda de pacotes** ou **internet instável** no Windows (onde o comando `tc` não está disponível), recomendamos o uso da ferramenta [Clumsy](https://jagt.github.io/clumsy/).
