@@ -4,18 +4,27 @@ import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
-import { env } from './config/env.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import { requestLogger } from './middlewares/requestLogger.js';
+import { requestMetrics } from './middlewares/requestMetrics.js';
 import { routes } from './routes/index.js';
 
 function createApp() {
   const app = express();
 
   app.disable('x-powered-by');
+  const trustProxyHops = Number.parseInt(
+    process.env.TRUST_PROXY_HOPS ?? '1',
+    10,
+  );
+  app.set(
+    'trust proxy',
+    Number.isFinite(trustProxyHops) && trustProxyHops >= 0 ? trustProxyHops : 1,
+  );
 
   app.use(requestLogger);
+  app.use(requestMetrics);
   app.use(helmet());
   app.use(cors());
   app.use(compression());
@@ -25,8 +34,8 @@ function createApp() {
 
   app.use(
     rateLimit({
-      windowMs: env.RATE_LIMIT_WINDOW_MS,
-      max: env.RATE_LIMIT_MAX,
+      windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 60_000),
+      max: Number(process.env.RATE_LIMIT_MAX ?? 100),
       standardHeaders: true,
       legacyHeaders: false,
     }),

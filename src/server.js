@@ -1,12 +1,25 @@
+import 'dotenv/config';
 import { createServer } from 'node:http';
 
 import { createApp } from './app.js';
-import { env } from './config/env.js';
+import { db } from './config/database.js';
 import { logger } from './config/logger.js';
 
 const app = createApp();
 const server = createServer(app);
 
-server.listen(env.PORT, () => {
-  logger.info({ port: env.PORT }, 'Server is running');
+const PORT = Number(process.env.PORT ?? 3000);
+
+server.listen(PORT, '0.0.0.0', async () => {
+  logger.info({ port: PORT }, 'Servidor em execução');
+
+  try {
+    await db.raw('SELECT 1');
+    logger.info(
+      { host: process.env.DB_HOST, db: process.env.DB_NAME },
+      'Banco de dados conectado',
+    );
+  } catch (err) {
+    logger.error({ err }, 'Falha ao conectar ao banco de dados');
+  }
 });
