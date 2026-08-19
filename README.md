@@ -4,7 +4,7 @@ Avaliação da viabilidade e desempenho do HTTP/3 em APIs desenvolvidas com Node
 
 ## Descrição
 
-O projeto tem como objetivo investigar o uso do protocolo HTTP/3 em APIs desenvolvidas com Node.js, analisando sua viabilidade prática, desempenho e possíveis desafios de implementação. Para isso, será desenvolvido um protótipo de API REST utilizando Node.js, com suporte experimental ao HTTP/3.
+O projeto tem como objetivo investigar o uso do protocolo HTTP/3 em APIs desenvolvidas com Node.js, analisando sua viabilidade prática, desempenho e possíveis desafios de implementação. Para isso, foi desenvolvido um protótipo de API REST em Node.js (HTTP/1.1) com **terminação HTTP/3 no proxy NGINX**, já que o Node não suporta QUIC nativamente.
 
 Durante o desenvolvimento, serão realizados experimentos para medir métricas como:
 • latência
@@ -34,7 +34,22 @@ Lian Mendes, Lucas Cardoso
 ## Requisitos do projeto
 
 - Node.js >= 18
-- Para rodar o proxy HTTP/3: Docker Desktop (Windows/macOS/Linux) com suporte a `docker compose`
+- PostgreSQL configurado (copie `.env.example` para `.env`)
+- **Docker obrigatório** para o proxy HTTP/3 (NGINX com suporte QUIC/UDP)
+
+## Arquitetura HTTP/3
+
+O Node.js não suporta HTTP/3 nativamente. A simulação usa um proxy reverso:
+
+```text
+Cliente --HTTP/3 (QUIC/UDP)--> NGINX :8443 --HTTP/1.1--> API Node :3000 --> PostgreSQL
+```
+
+- **Cliente → NGINX**: HTTP/3 (ou HTTP/2 via TLS na mesma porta 8443)
+- **NGINX → Node**: HTTP/1.1 (`proxy_pass` para `host.docker.internal:3000`)
+- O header `Alt-Svc` anuncia HTTP/3 para clientes compatíveis
+
+> Em `dev:nginx`, o proxy e a API sobem em paralelo. Se a API demorar alguns segundos para iniciar, o NGINX pode registrar erros temporários de upstream até a porta 3000 ficar disponível.
 
 ## Como rodar
 
@@ -53,6 +68,24 @@ npm run dev:nginx
 
 Isso sobe o NGINX com HTTP/3 em `https://localhost:8443` (TCP+UDP) e a API em `http://localhost:3000`.
 
+### Testes de protocolo (H1 vs H3)
+
+Com a API e o proxy rodando (`npm run start:nginx`):
+
+```bash
+npm run test:protocol
+```
+
+Os testes de protocolo validam **corretude**:
+- API responde em HTTP/1.1 (`http://localhost:3000/health`)
+- Proxy entrega HTTP/3 com resposta equivalente ao H1
+- Header `Alt-Svc` anuncia `h3=":8443"`
+- Logs do NGINX registram `protocol="HTTP/3.0"`
+
+`npm run verify:http3` é um alias para `npm run test:protocol`.
+
+Para **desempenho** (throughput, latência), use os benchmarks (`bench:h1`, `bench:h3`).
+
 ## Scripts
 
 - `npm run dev`: sobe a API com reload
@@ -63,8 +96,9 @@ Isso sobe o NGINX com HTTP/3 em `https://localhost:8443` (TCP+UDP) e a API em `h
 - `npm run proxy:down`: derruba o proxy NGINX
 - `npm run lint`: checagem de lint
 - `npm run format`: formata o projeto
-- `npm run test`: roda os testes unitários/integração
-- `npm run test:nginx`: roda os testes contra o proxy NGINX (https/http3)
+- `npm test`: smoke da API em H1 (sem Docker, sem banco)
+- `npm run test:protocol`: valida H3 e compara com H1 (requer Docker + `npm run start:nginx`)
+- `npm run verify:http3`: alias para `npm run test:protocol`
 
 ## Benchmarks Avançados
 
