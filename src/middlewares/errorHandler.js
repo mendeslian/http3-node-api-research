@@ -4,17 +4,6 @@ function errorHandler(err, req, res, next) {
     return;
   }
 
-  if (err?.name === 'ZodError') {
-    res.status(400).json({
-      error: 'ValidationError',
-      details: err.issues?.map((issue) => ({
-        path: Array.isArray(issue.path) ? issue.path.join('.') : '',
-        message: issue.message,
-      })),
-    });
-    return;
-  }
-
   const statusCode = Number(err?.statusCode ?? err?.status ?? 500);
   const message =
     statusCode >= 500 && process.env.NODE_ENV === 'production'

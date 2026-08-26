@@ -34,7 +34,6 @@ Lian Mendes, Lucas Cardoso
 ## Requisitos do projeto
 
 - Node.js >= 18
-- PostgreSQL configurado (copie `.env.example` para `.env`)
 - **Docker obrigatório** para o proxy HTTP/3 (NGINX com suporte QUIC/UDP)
 
 ## Arquitetura HTTP/3
@@ -42,7 +41,7 @@ Lian Mendes, Lucas Cardoso
 O Node.js não suporta HTTP/3 nativamente. A simulação usa um proxy reverso:
 
 ```text
-Cliente --HTTP/3 (QUIC/UDP)--> NGINX :8443 --HTTP/1.1--> API Node :3000 --> PostgreSQL
+Cliente --HTTP/3 (QUIC/UDP)--> NGINX :8443 --HTTP/1.1--> API Node :3000
 ```
 
 - **Cliente → NGINX**: HTTP/3 (ou HTTP/2 via TLS na mesma porta 8443)
@@ -58,9 +57,9 @@ npm install
 npm run dev
 ```
 
-### Rodar com proxy HTTP/3 (NGINX)
+A API estará disponível em `http://localhost:3000`.
 
-Em um terminal:
+### Rodar com proxy HTTP/3 (NGINX)
 
 ```bash
 npm run dev:nginx
@@ -68,23 +67,17 @@ npm run dev:nginx
 
 Isso sobe o NGINX com HTTP/3 em `https://localhost:8443` (TCP+UDP) e a API em `http://localhost:3000`.
 
-### Testes de protocolo (H1 vs H3)
-
-Com a API e o proxy rodando (`npm run start:nginx`):
+Para subir apenas o proxy:
 
 ```bash
-npm run test:protocol
+npm run proxy:up
 ```
 
-Os testes de protocolo validam **corretude**:
-- API responde em HTTP/1.1 (`http://localhost:3000/health`)
-- Proxy entrega HTTP/3 com resposta equivalente ao H1
-- Header `Alt-Svc` anuncia `h3=":8443"`
-- Logs do NGINX registram `protocol="HTTP/3.0"`
+Para derrubar o proxy:
 
-`npm run verify:http3` é um alias para `npm run test:protocol`.
-
-Para **desempenho** (throughput, latência), use os benchmarks (`bench:h1`, `bench:h3`).
+```bash
+npm run proxy:down
+```
 
 ## Scripts
 
@@ -96,52 +89,19 @@ Para **desempenho** (throughput, latência), use os benchmarks (`bench:h1`, `ben
 - `npm run proxy:down`: derruba o proxy NGINX
 - `npm run lint`: checagem de lint
 - `npm run format`: formata o projeto
-- `npm test`: smoke da API em H1 (sem Docker, sem banco)
-- `npm run test:protocol`: valida H3 e compara com H1 (requer Docker + `npm run start:nginx`)
-- `npm run verify:http3`: alias para `npm run test:protocol`
 
-## Benchmarks Avançados
+## Rotas
 
-O projeto inclui scripts de teste de carga com **k6** para comparar o desempenho entre HTTP/1.1 e HTTP/3 (QUIC) em cenários reais de estresse.
+- `GET /health` — retorna `{ "status": "ok", "time": "<ISO8601>" }`
 
-### Como rodar o benchmark:
-1. Instale o [k6](https://k6.io/docs/get-started/installation/)
-2. Sobe a API e o NGINX (`npm run start:nginx`)
-3. Em outro terminal, rode:
-   - `npm run bench:h1` (Teste direto contra Node - HTTP/1.1)
-   - `npm run bench:h3` (Teste via proxy - objetivo é HTTP/3)
+## Variáveis de ambiente
 
-#### Perfis e cenários (k6)
-- **Profiles** (controlam carga): `baseline` (default), `smoke`, `high_rps`
-- **Scenarios** (qual endpoint exercitar): `users_large_list` (default), `server_delay`
+Copie `.env.example` para `.env` e ajuste conforme necessário:
 
-Exemplos:
-
-```bash
-# HTTP/1.1 direto, smoke
-npm run bench:h1:smoke
-
-# Via proxy, smoke
-npm run bench:h3:smoke
-
-# Via proxy, cenário de backend lento
-k6 run -e TARGET_URL=https://localhost:8443 -e SCENARIO=server_delay benchmarks/k6/run.js
-```
-
-### Simulação de Cenários Críticos (Feedback do Professor)
-Para simular **alta latência**, **perda de pacotes** ou **internet instável** no Windows (onde o comando `tc` não está disponível), recomendamos o uso da ferramenta [Clumsy](https://jagt.github.io/clumsy/).
-
-Configurações recomendadas no Clumsy para testes de HTTP/3:
-- **Filtering**: `ip.DstAddr == 127.0.0.1 or ip.SrcAddr == 127.0.0.1`
-- **Lag**: 100ms a 500ms (Simula internet de longa distância/ruim)
-- **Drop**: 1% a 5% (Simula perda de pacotes, onde o QUIC deve performar melhor que o TCP)
-
-## Rotas de Benchmark
-- `GET /users?size=100000`: Busca de grande volume de dados (100k registros)
-- `GET /delay?ms=500`: Simulação de latência artificial no servidor
-- `GET /compute?iterations=5000000`: Carga pesada de CPU
-- `GET /stream`: Transferência de dados via chunks (ideal para testar throughput do H3)
-
-## Rotas iniciais
-- `GET /health`
-- `POST /v1/echo` (body: `{ "message": "..." }`)
+| Variável | Descrição | Padrão |
+|---|---|---|
+| `PORT` | Porta da API | `3000` |
+| `TRUST_PROXY_HOPS` | Hops de proxy confiável (NGINX) | `1` |
+| `LOG_LEVEL` | Nível de log do Pino | `info` |
+| `RATE_LIMIT_WINDOW_MS` | Janela do rate limit (ms) | `60000` |
+| `RATE_LIMIT_MAX` | Máximo de requisições por janela | `100` |
